@@ -5,8 +5,8 @@ namespace AP6UI_2048_Solver;
 
 public sealed class G2048
 {
-    private int Score { get; set; }
-    private int[,] Board { get; } = new int[4, 4];
+    private int _score;
+    private int[,] _board = new int[4, 4];
     private readonly Random _random = new();
     private readonly Statistics _statistics = new();
     private static readonly MoveDirection[] Directions = { MoveDirection.Left, MoveDirection.Up, MoveDirection.Right, MoveDirection.Down };
@@ -19,8 +19,8 @@ public sealed class G2048
         var hasUpdated = true;
         do
         {
-            if (hasUpdated) this.AddTile();
-            if (this.IsValid() is false) break;
+            if (hasUpdated) AddTile(ref this._board, this._random);
+            if (IsValid(this._board) is false) break;
             var index = this._random.Next(0, 4);
             hasUpdated = this.UpdateBoard(Directions[index]);
             switch (Directions[index])
@@ -43,9 +43,9 @@ public sealed class G2048
         }
         while (true);
 
-        _statistics.Score = Score;
+        _statistics.Score = _score;
         
-        var array = Board.Cast<int>().ToArray();
+        var array = _board.Cast<int>().ToArray();
         _statistics.Tiles.Min = array.Min();
         _statistics.Tiles.Max = array.Max();
         
@@ -60,8 +60,8 @@ public sealed class G2048
         var hasUpdated = true;
         do
         {
-            if (hasUpdated) this.AddTile();
-            if (this.IsValid() is false) break;
+            if (hasUpdated) AddTile(ref _board, this._random);
+            if (IsValid(this._board) is false) break;
             
             var scoresPerMove = new Dictionary<MoveDirection, int>
             {
@@ -73,7 +73,7 @@ public sealed class G2048
             
             foreach (var direction in Directions)
             {
-                var initialMoveBoard = (int[,])this.Board.Clone();
+                var initialMoveBoard = (int[,])this._board.Clone();
                 
                 if (UpdateBoard(initialMoveBoard, direction, out var initialScore))
                 {
@@ -124,13 +124,20 @@ public sealed class G2048
         }
         while (true);
 
-        _statistics.Score = Score;
+        _statistics.Score = _score;
         
-        var array = Board.Cast<int>().ToArray();
+        var array = _board.Cast<int>().ToArray();
         _statistics.Tiles.Min = array.Min();
         _statistics.Tiles.Max = array.Max();
         
         return _statistics;
+    }
+
+    private bool UpdateBoard(MoveDirection moveDirection)
+    {
+        var isUpdated = UpdateBoard(this._board, moveDirection, out var score);
+        this._score += score;
+        return isUpdated;
     }
 
     private static bool UpdateBoard(int[,] board, MoveDirection moveDirection, out int score)
@@ -195,31 +202,9 @@ public sealed class G2048
         return hasUpdated;
     }
 
-    private bool UpdateBoard(MoveDirection moveDirection)
-    {
-        var isUpdated = UpdateBoard(this.Board, moveDirection, out var score);
-        this.Score += score;
-        return isUpdated;
-    }
-
-    private bool IsValid() => (from direction in Directions let clone = (int[,])this.Board.Clone() where UpdateBoard(clone, direction, out _) select direction).Any();
     private static bool IsValid(int[,] board) => (from direction in Directions let clone = (int[,])board.Clone() where UpdateBoard(clone, direction, out _) select direction).Any();
 
-    private void AddTile()
-    {
-        var emptyTiles = new List<Tuple<int, int>>();
-        for (var row = 0; row < 4; row++)
-            for (var col = 0; col < 4; col++)
-                if (Board[row, col] == 0)
-                    emptyTiles.Add(new Tuple<int, int>(row, col));
-
-        var index = _random.Next(0, emptyTiles.Count); 
-        var tileValue = _random.Next(0, 100) < 95 ? 2 : 4; 
-        
-        Board[emptyTiles[index].Item1, emptyTiles[index].Item2] = tileValue;
-    }
-    
-    private static void AddTile(ref int[,] board, Random random)
+    private static void AddTile(ref int[,] board, in Random random)
     {
         var emptyTiles = new List<Tuple<int, int>>();
         for (var row = 0; row < 4; row++)

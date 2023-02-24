@@ -5,42 +5,24 @@ using AP6UI_2048_Solver.Entities;
 
 // Notify user
 Console.Clear();
-Console.WriteLine("Running");
+Console.WriteLine("Running ...");
 
 // Measurement
-const int runs = 150;
+const int runs = 300;
 
 var statisticsCollection = new ConcurrentBag<Statistics>();
-Parallel.For(0, runs, (index) =>
+Parallel.For(0, runs, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, (index) =>
 {
     var g2048 = new G2048();
-
-    Statistics? statistics;
-    switch (index)
+    var statistics = index switch
     {
-        case < 50:
-            Console.Clear();
-            Console.WriteLine("Running .");
-            statistics = g2048.ArtificialIntelligenceSolver(runs: 100, moves: 10000);
-            break;
-        case < 100:
-            Console.Clear();
-            Console.WriteLine("Running ..");
-            statistics = g2048.ArtificialIntelligenceSolver(runs: 500, moves: 10000);
-            break;
-        default:
-            Console.Clear();
-            Console.WriteLine("Running ...");
-            statistics = g2048.ArtificialIntelligenceSolver(runs: 1000, moves: 10000);
-            break;
-    }
+        < 100 => g2048.ArtificialIntelligenceSolver(runs: 100, moves: 1000),
+        < 200 => g2048.ArtificialIntelligenceSolver(runs: 250, moves: 1000),
+        _ => g2048.ArtificialIntelligenceSolver(runs: 500, moves: 1000)
+    };
 
     statisticsCollection.Add(statistics);
 });
-
-// Notify user
-Console.Clear();
-Console.WriteLine("Processing statistics");
 
 // Single game statistics
 var json = JsonSerializer.Serialize(statisticsCollection);

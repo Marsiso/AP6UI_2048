@@ -9,20 +9,20 @@ public sealed class GlobalStatistics
     public Score Score { get; set; } = new();
     public Tiles Tiles { get; set; } = new();
     public AverageTiles AverageTiles { get; set; } = new();
-
     public AverageMoves AverageMoves { get; set; } = new();
 
     public static GlobalStatistics ToGlobalStatistics(ICollection<Statistics> statistics)
     {
+        var average  = statistics.Aggregate((current, statistic) => current + statistic) / statistics.Count;
         var globalStatistics = new GlobalStatistics
         {
-            Runs = statistics.First().Runs,
-            MovesLimit = statistics.First().MovesLimit,
+            Runs = average.Runs,
+            MovesLimit = average.MovesLimit,
             Score = new Score
             {
                 Wins = statistics.Count(statistic => statistic.Tiles.Max >= 2048),
                 Loses = statistics.Count(statistic => statistic.Tiles.Max < 2048),
-                Average = Convert.ToInt32(Math.Round(statistics.Average(statistic => statistic.Score))),
+                Average = average.Score,
                 Min = statistics.Min(statistic => statistic.Score), 
                 Max = statistics.Max(statistic => statistic.Score)
             },
@@ -33,18 +33,17 @@ public sealed class GlobalStatistics
             },
             AverageTiles = new AverageTiles
             {
-                Min = Convert.ToInt32(Math.Round(statistics.Average(statistic => statistic.Tiles.Min))), 
-                Max = Convert.ToInt32(Math.Round(statistics.Average(statistic => statistic.Tiles.Max)))
+                Min = average.Tiles.Min, 
+                Max = average.Tiles.Max
             },
             AverageMoves = new AverageMoves
             {
-                Left = Convert.ToInt32(Math.Round(statistics.Average(statistic => statistic.Moves.Left))),
-                Up = Convert.ToInt32(Math.Round(statistics.Average(statistic => statistic.Moves.Up))),
-                Right = Convert.ToInt32(Math.Round(statistics.Average(statistic => statistic.Moves.Right))),
-                Down = Convert.ToInt32(Math.Round(statistics.Average(statistic => statistic.Moves.Down)))
+                Left = average.Moves.Left,
+                Up = average.Moves.Up,
+                Right = average.Moves.Right,
+                Down = average.Moves.Down
             }
         };
-        
 
         return globalStatistics;
     }
